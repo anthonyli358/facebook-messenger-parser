@@ -1,0 +1,7 @@
+# PyCharm files 
+.idea/
+__pycache__/
+*.pyc
+
+stickers_used/
+*.json
