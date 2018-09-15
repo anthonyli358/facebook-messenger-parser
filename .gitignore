@@ -3,5 +3,6 @@
 __pycache__/
 *.pyc
 
+messages/
 stickers_used/
 *.json
