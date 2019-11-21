@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 
+graphs/
 messages/
 stickers_used/
 *.json
