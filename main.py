@@ -1,11 +1,12 @@
 import glob
 import json
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from matplotlib.ticker import FuncFormatter
 import datetime
+from collections import Counter
+import networkx as nx
 
 
 def import_messenger_data(path):
@@ -59,15 +60,12 @@ def messages_by_month(df):
                 temp_dict[curr_month] += 1
             else:
                 temp_dict[curr_month] = 1
-
         for k, v in temp_dict.items():
             title.append(row['title'])
             month.append(k)
             month_messages.append(v // participants)
-
     month_messages_df = pd.DataFrame({'title': title, 'month': month, 'month_messages/participants': month_messages})
     month_messages_df['month'] = pd.to_datetime(month_messages_df['month'], format='%Y-%m')
-
     return month_messages_df
 
 
@@ -84,6 +82,20 @@ def plot_annotated_month_data(df, x, y, label, annotate=True):
     plt.xlabel('year')  # seaborn automatically simplified the month
     # plt.xticks(rotation=90)
     plt.show()
+
+
+def create_network_df(df):
+    name, connections, messages = [], [], []
+    for index, row in df.iterrows():
+        message_counter = Counter([message['sender_name'] for message in row['messages']])
+        if isinstance(row['participants'], list):  # deal with deleted groups
+            for i in range(len(row['participants'])):
+                name.extend([row['participants'][i]['name']] * (len(row['participants']) - 1))
+                connections.extend([i['name'] for i in row['participants'][0:i] + row['participants'][i+1:]])
+                messages.extend([message_counter[row['participants'][i]['name']]] * (len(row['participants']) - 1))
+    network_df = pd.DataFrame({'name': name, 'connections': connections, 'messages': messages})
+    network_df = network_df.groupby(['name', 'connections']).sum().reset_index()
+    return network_df
 
 
 if __name__ == '__main__':
@@ -105,8 +117,12 @@ if __name__ == '__main__':
                            annotate=annotate_plots)
     plot_annotated_scatter(messenger_data, 'time_active_days_log', 'messages/participants', 'title',
                            logx=True, logy=True, annotate=annotate_plots)
-    # Velocity by month
+    # Messages by month
     month_data = messages_by_month(messenger_data).fillna(0)
     plot_annotated_month_data(month_data, 'month', 'month_messages/participants', 'title', annotate=annotate_plots)
+    # Network plot
+    network_df = create_network_df(messenger_data)
     # TODO: Friend network by message counts (node size) group chat common members (edges)
+    # TODO: Directed graph or how to deal with messages both ways
+    # TODO: Node size ~log(number of messages)
     # TODO: Group nodes (friend groups/group chat)
