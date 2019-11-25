@@ -7,6 +7,7 @@ from matplotlib.ticker import FuncFormatter
 import datetime
 from collections import Counter
 import networkx as nx
+from config import config  # mask name in separate file
 
 
 def import_messenger_data(path):
@@ -49,35 +50,35 @@ def plot_annotated_scatter(df, x, y, label, logx=False, logy=False, annotate=Tru
     plt.show()
 
 
-def messages_by_month(df):
+def messages_by_month(df, self=False):
     title, month, month_messages = [], [], []
     for index, row in df.iterrows():
         temp_dict = {}
         participants = len(row['participants']) if isinstance(row['participants'], list) else 1
         for message in row['messages']:
             curr_month = datetime.datetime.fromtimestamp(message['timestamp_ms'] / 1000).strftime('%Y-%m')
-            if curr_month in temp_dict:
-                temp_dict[curr_month] += 1
-            else:
-                temp_dict[curr_month] = 1
+            if self is False or (self is True and message['sender_name'] == config['name']):
+                if curr_month in temp_dict:
+                    temp_dict[curr_month] += 1
+                else:
+                    temp_dict[curr_month] = 1
         for k, v in temp_dict.items():
-            title.append(row['title'])
+            title.append(row['title'] if self is False else config['name'])
             month.append(k)
-            month_messages.append(v // participants)
+            month_messages.append(v // participants if self is False else v)
     month_messages_df = pd.DataFrame({'title': title, 'month': month, 'month_messages/participants': month_messages})
     month_messages_df['month'] = pd.to_datetime(month_messages_df['month'], format='%Y-%m')
     return month_messages_df
 
 
 def plot_annotated_month_data(df, x, y, label, annotate=True):
-    ax = sns.lineplot(x=x, y=y, data=df, hue=label, legend=False,
-                      palette=sns.color_palette('RdBu', n_colors=len(df['title'].unique())))
+    ax = sns.lineplot(x=x, y=y, data=df, hue=label if len(df[label].unique()) > 1 else None, legend=False,
+                      palette=sns.color_palette('RdBu', n_colors=len(df[label].unique())))
     if annotate:
-        to_annotate = df[df.groupby('title')['month_messages/participants'].transform(max) ==
-                         df['month_messages/participants']]
-        to_annotate = to_annotate.groupby('title').first()  # take first by group in case of duplicates
+        to_annotate = df[df.groupby(label)[y].transform(max) == df[y]]
+        to_annotate = to_annotate.groupby(label).first()  # take first by group in case of duplicates
         for index, row in to_annotate.iterrows():
-            plt.gca().annotate(index, xy=(row['month'], row['month_messages/participants']))
+            plt.gca().annotate(index, xy=(row[x], row[y]))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda x, p: format(int(x), ',')))
     plt.xlabel('year')  # seaborn automatically simplified the month
     # plt.xticks(rotation=90)
@@ -120,6 +121,11 @@ if __name__ == '__main__':
     # Messages by month
     month_data = messages_by_month(messenger_data).fillna(0)
     plot_annotated_month_data(month_data, 'month', 'month_messages/participants', 'title', annotate=annotate_plots)
+    # Self messages by month
+    self_month_data = messages_by_month(messenger_data, self=True).fillna(0)
+    self_month_data = self_month_data.groupby(['month']).sum().reset_index()
+    self_month_data['title'] = config['name']
+    plot_annotated_month_data(self_month_data, 'month', 'month_messages/participants', 'title', annotate=False)
     # Network plot
     network_df = create_network_df(messenger_data)
     # TODO: Friend network by message counts (node size) group chat common members (edges)

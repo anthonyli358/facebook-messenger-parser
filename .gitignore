@@ -7,3 +7,5 @@ graphs/
 messages/
 stickers_used/
 *.json
+
+config.py
