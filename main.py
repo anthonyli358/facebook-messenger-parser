@@ -121,11 +121,19 @@ if __name__ == '__main__':
     # Messages by month
     month_data = messages_by_month(messenger_data).fillna(0)
     plot_annotated_month_data(month_data, 'month', 'month_messages/participants', 'title', annotate=annotate_plots)
+    # Messages by month rolling average
+    month_data['month_messages_roll_av'] = month_data.groupby('title')['month_messages/participants'].transform(
+        lambda x: x.rolling(3, 1).mean())
+    plot_annotated_month_data(month_data, 'month', 'month_messages_roll_av', 'title', annotate=annotate_plots)
     # Self messages by month
     self_month_data = messages_by_month(messenger_data, self=True).fillna(0)
     self_month_data = self_month_data.groupby(['month']).sum().reset_index()
     self_month_data['title'] = config['name']
     plot_annotated_month_data(self_month_data, 'month', 'month_messages/participants', 'title', annotate=False)
+    # Self messages by month rolling average
+    self_month_data['month_messages_roll_av'] = self_month_data.groupby(
+        'title')['month_messages/participants'].transform(lambda x: x.rolling(3, 1).mean())
+    plot_annotated_month_data(self_month_data, 'month', 'month_messages_roll_av', 'title', annotate=False)
     # Network plot
     network_df = create_network_df(messenger_data)
     # TODO: Friend network by message counts (node size) group chat common members (edges)
