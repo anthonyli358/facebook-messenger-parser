@@ -8,15 +8,28 @@ import datetime
 from collections import Counter
 import networkx as nx
 from config import config  # mask name in separate file
+import os
 
 
-def import_messenger_data(path):
+def import_messenger_data(path, split=True):
     message_dict = {}
-    for chat in glob.glob(f'{path}/*/message.json'):
+    for chat in glob.glob(f'{path}/*/message_*.json'):
         with open(chat) as f:
             temp_chat = json.load(f)
-            message_dict[temp_chat['title']] = temp_chat
+            if split:  # new facebook messenger data splits messages into multiple json files
+                if temp_chat['title'] in message_dict:
+                    message_dict[temp_chat['title']]['messages'].extend(temp_chat['messages'])
+                else:
+                    message_dict[temp_chat['title']] = temp_chat
+            else:
+                message_dict[temp_chat['title']] = temp_chat
     return message_dict
+
+
+def clean_messenger_data(df):
+    df['participants'] = df['participants'].apply(lambda x: x if isinstance(x, list) else [])  # dealing with self chats
+    df['participants'] = df['participants'].apply(lambda x: [config['name']] if len(x) < 1 else x)
+    return df
 
 
 def plot_ordered_bar(df, x, y, slice=50, annotate=True):
@@ -54,7 +67,6 @@ def messages_by_month(df, self=False):
     title, month, month_messages = [], [], []
     for index, row in df.iterrows():
         temp_dict = {}
-        participants = len(row['participants']) if isinstance(row['participants'], list) else 1
         for message in row['messages']:
             curr_month = datetime.datetime.fromtimestamp(message['timestamp_ms'] / 1000).strftime('%Y-%m')
             if self is False or (self is True and message['sender_name'] == config['name']):
@@ -65,7 +77,7 @@ def messages_by_month(df, self=False):
         for k, v in temp_dict.items():
             title.append(row['title'] if self is False else config['name'])
             month.append(k)
-            month_messages.append(v // participants if self is False else v)
+            month_messages.append(v // len(row['participants']) if self is False else v)
     month_messages_df = pd.DataFrame({'title': title, 'month': month, 'month_messages/participants': month_messages})
     month_messages_df['month'] = pd.to_datetime(month_messages_df['month'], format='%Y-%m')
     return month_messages_df
@@ -89,53 +101,65 @@ def create_network_df(df):
     name, connections, messages = [], [], []
     for index, row in df.iterrows():
         message_counter = Counter([message['sender_name'] for message in row['messages']])
-        if isinstance(row['participants'], list):  # deal with deleted groups
-            for i in range(len(row['participants'])):
-                name.extend([row['participants'][i]['name']] * (len(row['participants']) - 1))
-                connections.extend([i['name'] for i in row['participants'][0:i] + row['participants'][i+1:]])
-                messages.extend([message_counter[row['participants'][i]['name']]] * (len(row['participants']) - 1))
+        for i in range(len(row['participants'])):
+            name.extend([row['participants'][i]['name']] * (len(row['participants']) - 1))
+            connections.extend([i['name'] for i in row['participants'][0:i] + row['participants'][i+1:]])
+            messages.extend([message_counter[row['participants'][i]['name']]] * (len(row['participants']) - 1))
     network_df = pd.DataFrame({'name': name, 'connections': connections, 'messages': messages})
     network_df = network_df.groupby(['name', 'connections']).sum().reset_index()
     return network_df
 
 
 if __name__ == '__main__':
-    annotate_plots = False
+    # Annotate plots with chat titles?
+    annotate_plots = True
+
     # Import data
     messenger_data = pd.DataFrame.from_dict(import_messenger_data('messages')).T.reset_index(drop=True)
+    messenger_data = clean_messenger_data(messenger_data)
     pd.plotting.register_matplotlib_converters()  # temporary fix to register converters
+
     # Plot message length data
     messenger_data['message_lengths'] = messenger_data['messages'].apply(lambda x: len(x))
     plot_ordered_bar(messenger_data, 'message_lengths', 'title', slice=50, annotate=annotate_plots)
+
     # Time active
     messenger_data['messages/participants'] = messenger_data['message_lengths'] / messenger_data['participants'].apply(
-        lambda x: len(x) if isinstance(x, list) else 1)
-    messenger_data['time_active_days'] = messenger_data['messages'].apply(
-        lambda x: (x[0]['timestamp_ms'] - x[-1]['timestamp_ms']) / (1000 * 60 * 60 * 24))  # ms to days
+        lambda x: len(x))
+    messenger_data['time_active_days'] = messenger_data['messages'].apply(   # ms to days
+        lambda x: (max([i['timestamp_ms'] for i in x]) - min([i['timestamp_ms'] for i in x])) / (1000 * 60 * 60 * 24))
     messenger_data['time_active_days_log'] = messenger_data['time_active_days'].apply(
         lambda x: 1.001 if x < 1.001 else x)  # Account for cases with invalid log(time_active_days)
     plot_annotated_scatter(messenger_data, 'time_active_days', 'messages/participants', 'title',
                            annotate=annotate_plots)
     plot_annotated_scatter(messenger_data, 'time_active_days_log', 'messages/participants', 'title',
                            logx=True, logy=True, annotate=annotate_plots)
+
     # Messages by month
     month_data = messages_by_month(messenger_data).fillna(0)
     plot_annotated_month_data(month_data, 'month', 'month_messages/participants', 'title', annotate=annotate_plots)
+
     # Messages by month rolling average
     month_data['month_messages_roll_av'] = month_data.groupby('title')['month_messages/participants'].transform(
         lambda x: x.rolling(3, 1).mean())
     plot_annotated_month_data(month_data, 'month', 'month_messages_roll_av', 'title', annotate=annotate_plots)
+
     # Self messages by month
     self_month_data = messages_by_month(messenger_data, self=True).fillna(0)
     self_month_data = self_month_data.groupby(['month']).sum().reset_index()
     self_month_data['title'] = config['name']
     plot_annotated_month_data(self_month_data, 'month', 'month_messages/participants', 'title', annotate=False)
+
     # Self messages by month rolling average
     self_month_data['month_messages_roll_av'] = self_month_data.groupby(
         'title')['month_messages/participants'].transform(lambda x: x.rolling(3, 1).mean())
     plot_annotated_month_data(self_month_data, 'month', 'month_messages_roll_av', 'title', annotate=False)
+
     # Network plot
     network_df = create_network_df(messenger_data)
+
+    # TODO: Fix plots
+    # TODO: Fix network_df function
     # TODO: Friend network by message counts (node size) group chat common members (edges)
     # TODO: Directed graph or how to deal with messages both ways
     # TODO: Node size ~log(number of messages)
