@@ -35,6 +35,7 @@ def clean_messenger_data(df):
 def plot_ordered_bar(df, x, y, slice=50, annotate=True):
     df = df.sort_values(x, ascending=False)
     # Emojis aren't available in the default font, will raise 'Glyph missing from current font' errors
+    f, ax = plt.subplots()
     ax = sns.barplot(x=x, y=y, data=df,
                      palette=sns.color_palette('Blues', n_colors=slice),
                      order=df[:slice]['title'][::-1])
@@ -47,6 +48,7 @@ def plot_ordered_bar(df, x, y, slice=50, annotate=True):
 
 
 def plot_annotated_scatter(df, x, y, label, logx=False, logy=False, annotate=True):
+    f, ax = plt.subplots()
     ax = sns.scatterplot(x=x, y=y, data=df)
     if logx:
         ax.set_xscale('log')
@@ -84,6 +86,7 @@ def messages_by_month(df, self=False):
 
 
 def plot_annotated_month_data(df, x, y, label, annotate=True):
+    f, ax = plt.subplots()
     ax = sns.lineplot(x=x, y=y, data=df, hue=label if len(df[label].unique()) > 1 else None, legend=False,
                       palette=sns.color_palette('RdBu', n_colors=len(df[label].unique())))
     if annotate:
