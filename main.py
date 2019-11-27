@@ -27,8 +27,8 @@ def import_messenger_data(path, split=True):
 
 
 def clean_messenger_data(df):
-    df['participants'] = df['participants'].apply(lambda x: x if isinstance(x, list) else [])  # dealing with self chats
-    df['participants'] = df['participants'].apply(lambda x: [config['name']] if len(x) < 1 else x)
+    df['participants'] = df['participants'].apply(lambda x: x if isinstance(x, list) else [])  # self-messages
+    df['participants'] = df['participants'].apply(lambda x: [{'name': config['name']}] if len(x) < 1 else x)
     return df
 
 
@@ -104,10 +104,11 @@ def create_network_df(df):
     name, connections, messages = [], [], []
     for index, row in df.iterrows():
         message_counter = Counter([message['sender_name'] for message in row['messages']])
-        for i in range(len(row['participants'])):
-            name.extend([row['participants'][i]['name']] * (len(row['participants']) - 1))
-            connections.extend([i['name'] for i in row['participants'][0:i] + row['participants'][i+1:]])
-            messages.extend([message_counter[row['participants'][i]['name']]] * (len(row['participants']) - 1))
+        if len(row['participants']) > 1:  # no connections to for self-messages
+            for i in range(len(row['participants'])):
+                name.extend([row['participants'][i]['name']] * (len(row['participants']) - 1))
+                connections.extend([i['name'] for i in row['participants'][0:i] + row['participants'][i+1:]])
+                messages.extend([message_counter[row['participants'][i]['name']]] * (len(row['participants']) - 1))
     network_df = pd.DataFrame({'name': name, 'connections': connections, 'messages': messages})
     network_df = network_df.groupby(['name', 'connections']).sum().reset_index()
     return network_df
@@ -161,8 +162,6 @@ if __name__ == '__main__':
     # Network plot
     network_df = create_network_df(messenger_data)
 
-    # TODO: Fix plots
-    # TODO: Fix network_df function
     # TODO: Friend network by message counts (node size) group chat common members (edges)
     # TODO: Directed graph or how to deal with messages both ways
     # TODO: Node size ~log(number of messages)
