@@ -50,9 +50,9 @@ more context.
 - Save the Messenger data folder for each chat to a *messages* folder in the same folder as this module
 - If the Messenger data files are entitled *message.json* instead of *message_x.json* where x is a number, this is the old Messenger data format. 
 At the bottom of [main.py](main.py) add ```split=False``` to the ```import_messenger_data('messages')``` function call
-- Create a config.py file containing ```config = {'name': ''}```, this is used to plot the messages by year for a single name. 
+- Create a *config.py* file containing ```config = {'name': ''}```, this is used to plot the messages by year for a single name. 
 Alternatively replace all instances of ```config['name']``` with the name to use
-- Change the annotate_plots variable under ```if __name__ == '__main__'``` in [main.py](main.py) to True or False and run
+- Change the *annotate_plots* variable under ```if __name__ == '__main__'``` in [main.py](main.py) to *True* or *False* and run
 
 ## Development
 - Exploration of Facebook Messenger data with both standard and network plots
