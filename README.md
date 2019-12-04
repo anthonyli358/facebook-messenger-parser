@@ -22,8 +22,8 @@ will tend to involve closer friends (*right*).
     <img src="graphs_nolabel/noLabel_messagesVsTime_loglog.png" alt="message_vs_time_loglog" width="400"/> 
 </p>
 
-The number of messages by year shows that the most active chat changes over time (*left). The are also some interesting patterns 
-in the number of own messages sent, with more sent around the new year and less just before summer (*right).
+The number of messages by year shows that the most active chat changes over time (*left*). The are also some interesting patterns 
+in the number of own messages sent, with more sent around the new year and less just before summer (*right*).
 For group chats the y-axis is normalised by the number of participants.
 
 <p align="left">
@@ -36,7 +36,7 @@ For group chats the y-axis is normalised by the number of participants.
 To avoid overclustering the top 100 message participants (*left*) and top 50 group chats (*right*) and are plotted in 
 spring layout to group connected nodes, with clear groups and subgroups forming. The size of each node is weighted by log(number of messages).
 
-Plotting the group chat tends to group by mutual participants whereas plotting the participants individually enables 
+Plotting the group chat tends to group by mutual chat participants whereas plotting the participants individually enables 
 clearer mutual friend groups to form. 
 This becomes much more interesting with knowledge of your own friend circles and annotate_plots=True to give the data
 more context.
@@ -54,5 +54,5 @@ add split=False to import_messenger_data('messages') as this is the old Messenge
 
 ## Development
 - Exploratory work of Facebook Messenger data with both standard and network plots
-- Examples of non-annotated graphs are available in the ['graphs_nolabel' folder](graphs_nolabel), 
+- Examples of non-annotated graphs are available in the [graphs_nolabel](graphs_nolabel) folder, 
 annotated plots are much more intriguing but are withheld due to PII
