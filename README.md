@@ -1,29 +1,29 @@
 # facebook-messenger-parser
-A data parser to extract insights from Facebook Messenger data.
-This exploration is conducted on the Messenger data 
+A data parser to extract insights from Facebook Messenger data
 [downloaded from Facebook](https://www.facebook.com/settings?tab=your_facebook_information) in JSON format.
 
 ## Results
 ### Exploratory Plots
-Sort the data and take the 50 chats with the most messages.
+Due to Messenger being part of a social network, preferential attachment (in this case
+the sending of messages) is expected, and we do indeed see a few chats with the majority of the sent messages.
 
 <p align="left">
     <img src="graphs_nolabel/noLabel_messageLengths.png" alt="message_lengths" width="400"/> 
 </p>
 
-The number of messages in a chat doesn't appear to correlate with active time (time between the first and last messages 
-in the chat), which is expected to an extent since the closeness of the relationship will be a much stronger factor. 
+The number of messages in a chat doesn't appear to correlate with active time (the time between the first and last 
+messages in a chat), which is expected to an extent as the closeness of the relationship should be a much stronger factor (*left*). 
 However, taking a log-log view demonstrates that the chats with the most messages have been active for longer 
-(have the opportunity for more messages), but this can also be explained by the fact that the chats which don't die out
-will tend to involve closer friends.
+(as they have the more opportunity to send messages), but this can also be explained by the fact that the chats which don't die out
+will tend to involve closer friends (*right*).
 
 <p align="left">
     <img src="graphs_nolabel/noLabel_messagesVsTime.png" alt="message_vs_time" width="400"/> 
     <img src="graphs_nolabel/noLabel_messagesVsTime_loglog.png" alt="message_vs_time_loglog" width="400"/> 
 </p>
 
-The number of messages by year shows that the most active chat changes over time. The are also some interesting patterns 
-in the number of own messages sent, with more sent around the new year and less just before summer.
+The number of messages by year shows that the most active chat changes over time (*left). The are also some interesting patterns 
+in the number of own messages sent, with more sent around the new year and less just before summer (*right).
 For group chats the y-axis is normalised by the number of participants.
 
 <p align="left">
@@ -33,17 +33,17 @@ For group chats the y-axis is normalised by the number of participants.
 
 ### Network Plots
 [Networkx](https://networkx.github.io/) is a fantastic Python package for anything network related.
-To avoid overclustering the top 50 group chats and top 100 message participants are plotted in spring layout to group 
-connected nodes, and clear groups and subgroups form. The size of each node is weighted by log(number of messages).
+To avoid overclustering the top 100 message participants (*left*) and top 50 group chats (*right*) and are plotted in 
+spring layout to group connected nodes, with clear groups and subgroups forming. The size of each node is weighted by log(number of messages).
 
 Plotting the group chat tends to group by mutual participants whereas plotting the participants individually enables 
 clearer mutual friend groups to form. 
-This becomes much more interesting with annotate_plots=True and knowledge of your own friend circles to give the data
-some context.
+This becomes much more interesting with knowledge of your own friend circles and annotate_plots=True to give the data
+more context.
 
 <p align="left">
     <img src="graphs_nolabel/noLabel_network.png" alt="friend_network" width="400"/> 
-    <img src="graphs_nolabel/noLabel_network_groups.png" alt="group_chat_network" width="400"/> 
+    <img src="graphs_nolabel/noLabel_networkGroups.png" alt="group_chat_network" width="400"/> 
 </p>
 
 ## Getting Started
@@ -54,5 +54,5 @@ add split=False to import_messenger_data('messages') as this is the old Messenge
 
 ## Development
 - Exploratory work of Facebook Messenger data with both standard and network plots
-- Examples of non-annotated graphs are available in the ['graphs_nolabel' folder](\graphs_nolabel), 
+- Examples of non-annotated graphs are available in the ['graphs_nolabel' folder](graphs_nolabel), 
 annotated plots are much more intriguing but are withheld due to PII
