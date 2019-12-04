@@ -51,8 +51,10 @@ more context.
 - If your Messenger data files are entitled 'message.json' instead of 'message_x.json' where x is a number, this is the old Messenger data format. 
 At the bottom of [main.py](main.py) add split=False to the import_messenger_data('messages') function call
 - Change the annotate_plots variable to True or False
+- Create a config.py file containing ```config = {'name': ''}```, this is used to plot the messages by year for a single name. 
+Alternatively replace all instances of ```config['name']``` with the name to use
 
 ## Development
-- Exploratory work of Facebook Messenger data with both standard and network plots
+- Exploration of Facebook Messenger data with both standard and network plots
 - Examples of non-annotated graphs are available in the [graphs_nolabel](graphs_nolabel) folder, 
 annotated plots are much more intriguing but are withheld due to PII
