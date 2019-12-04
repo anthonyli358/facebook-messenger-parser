@@ -205,11 +205,12 @@ if __name__ == '__main__':
     self_month_data = messages_by_month(messenger_data, self=True)
     self_month_data = self_month_data.groupby(['month']).sum().reset_index()
     self_month_data['title'] = config['name']
-    plot_annotated_month_data(self_month_data, 'month', 'month_messages/participants', 'title', annotate=False)
+    self_month_data.rename(columns={'month_messages/participants': 'month_messages'}, inplace=True)
+    plot_annotated_month_data(self_month_data, 'month', 'month_messages', 'title', annotate=False)
 
     # Self messages by month rolling average
-    self_month_data['month_messages_roll_av'] = self_month_data.groupby(
-        'title')['month_messages/participants'].transform(lambda x: x.rolling(3, 1).mean())
+    self_month_data['month_messages_roll_av'] = self_month_data.groupby('title')['month_messages'].transform(
+        lambda x: x.rolling(3, 1).mean())
     plot_annotated_month_data(self_month_data, 'month', 'month_messages_roll_av', 'title', annotate=False)
 
     # Network plot
