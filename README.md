@@ -36,7 +36,7 @@ For group chats the y-axis is normalised by the number of participants.
 To avoid overclustering the top 100 message participants (*left*) and top 50 group chats (*right*) and are plotted in 
 spring layout to group connected nodes, with clear groups and subgroups forming. The size of each node is weighted by log(number of messages).
 
-Plotting the group chat tends to group by mutual chat participants whereas plotting the participants individually enables 
+Plotting by group chat tends to group by mutual chat participants whereas plotting the participants individually enables 
 clearer mutual friend groups to form. 
 This becomes much more interesting with knowledge of your own friend circles and annotate_plots=True to give the data
 more context.
@@ -48,8 +48,8 @@ more context.
 
 ## Getting Started
 - Save your Messenger data to a 'messages' folder in the same folder as this module
-- If your Messenger data files are entitled 'message.json', at the bottom of [main.py](main.py) 
-add split=False to import_messenger_data('messages') as this is the old Messenger data format
+- If your Messenger data files are entitled 'message.json' instead of 'message_x.json' where x is a number, this is the old Messenger data format. 
+At the bottom of [main.py](main.py) add split=False to the import_messenger_data('messages') function call
 - Change the annotate_plots variable to True or False
 
 ## Development
